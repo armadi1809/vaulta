@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -84,6 +85,69 @@ func InitVault(path string) error {
 	enc := json.NewEncoder(file)
 	enc.SetIndent("", "  ")
 	return enc.Encode(vault)
+
+}
+
+func readVault(path string) (*VaultFile, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var vault VaultFile
+	if err = json.NewDecoder(f).Decode(&vault); err != nil {
+		return nil, err
+	}
+
+	return &vault, nil
+
+}
+
+func UnlockVault(path string) ([]byte, *VaultFile, error) {
+	vault, err := readVault(path)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var masterPwd string
+
+	fmt.Print("Enter your master password: \n")
+	fmt.Scanln(&masterPwd)
+
+	salt, err := base64.StdEncoding.DecodeString(vault.KDF.Salt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := argon2.IDKey([]byte(masterPwd), salt, 3, 64*1024, 2, 32)
+
+	nonce, err := base64.StdEncoding.DecodeString(vault.Cipher.Nonce)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cipherText, err := base64.StdEncoding.DecodeString(vault.Cipher.Data)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	plaintext, err := gcm.Open(nil, nonce, cipherText, nil)
+	if err != nil {
+		return nil, nil, errors.New("Invalid password or corrupted vault...")
+	}
+
+	return plaintext, vault, nil
 
 }
 

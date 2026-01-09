@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "kdf": {
+    "algorithm": "argon2id",
+    "salt": "NcFk2fWQX2Ywi8sOZ07FBQ==",
+    "iterations": 3,
+    "memory": 65536,
+    "parallelism": 2
+  },
+  "cipher": {
+    "algorithm": "aes-256-gcm",
+    "nonce": "+7sgkWjhFePTk17G",
+    "data": "0mlbUp7CiyupuiunGMpB7XCwMjBr751+x8JXuiKU"
+  }
+}
