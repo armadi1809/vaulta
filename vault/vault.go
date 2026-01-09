@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"golang.org/x/crypto/argon2"
+	"golang.org/x/term"
 )
 
 type VaultFile struct {
@@ -34,16 +35,17 @@ type Cipher struct {
 }
 
 func InitVault(path string) error {
-	var masterPwd string
 	fmt.Print("Choose a master password: \n")
-	fmt.Scanln(&masterPwd)
+	masterPwd, err := term.ReadPassword(int(os.Stdin.Fd()))
 
 	salt, err := randomBytes(16)
 	if err != nil {
 		return err
 	}
 
-	key := argon2.IDKey([]byte(masterPwd), salt, 3, 64*1024, 2, 32)
+	key := argon2.IDKey(masterPwd, salt, 3, 64*1024, 2, 32)
+
+	zero(masterPwd)
 
 	plaintext := []byte(`{"entries":[]}`)
 
@@ -59,6 +61,9 @@ func InitVault(path string) error {
 
 	nonce, err := randomBytes(gcm.NonceSize())
 	ciphertext := gcm.Seal(nil, nonce, plaintext, nil)
+
+	zero(plaintext)
+	zero(key)
 
 	vault := VaultFile{
 		Version: 1,
@@ -104,23 +109,23 @@ func readVault(path string) (*VaultFile, error) {
 
 }
 
-func UnlockVault(path string) ([]byte, *VaultFile, error) {
+func unlockVault(path string) ([]byte, *VaultFile, error) {
 	vault, err := readVault(path)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var masterPwd string
-
 	fmt.Print("Enter your master password: \n")
-	fmt.Scanln(&masterPwd)
+	masterPwd, err := term.ReadPassword(int(os.Stdin.Fd()))
 
 	salt, err := base64.StdEncoding.DecodeString(vault.KDF.Salt)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	key := argon2.IDKey([]byte(masterPwd), salt, 3, 64*1024, 2, 32)
+	key := argon2.IDKey(masterPwd, salt, 3, 64*1024, 2, 32)
+
+	zero(masterPwd)
 
 	nonce, err := base64.StdEncoding.DecodeString(vault.Cipher.Nonce)
 	if err != nil {
@@ -143,6 +148,7 @@ func UnlockVault(path string) ([]byte, *VaultFile, error) {
 	}
 
 	plaintext, err := gcm.Open(nil, nonce, cipherText, nil)
+	zero(key)
 	if err != nil {
 		return nil, nil, errors.New("Invalid password or corrupted vault...")
 	}
@@ -158,4 +164,10 @@ func randomBytes(size int) ([]byte, error) {
 		return nil, err
 	}
 	return buf, nil
+}
+
+func zero(buf []byte) {
+	for i := range buf {
+		buf[i] = 0
+	}
 }
