@@ -30,6 +30,13 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to add entry to the vault.. %v", err)
 		}
+	case "get":
+		// get entry workflow
+		res, err := vault.GetEntry("./vault.json")
+		if err != nil {
+			log.Fatalf("Failed to get entry from the vault.. %v", err)
+		}
+		fmt.Println(res)
 	case "replace":
 		// replace entry workflow
 	case "delete":

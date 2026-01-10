@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/term"
@@ -285,6 +286,32 @@ func AddEntry(path string) error {
 
 	vault.updateCipher(nonce, ciphertext)
 	return writeVaultFile(path, vault)
+}
+
+func GetEntry(path string) (string, error) {
+	notes, err := promptNormal("Enter the notes for the entry you want to retrieve: ")
+	if err != nil {
+		return "", err
+	}
+	plaintext, _, key, err := unlockVault(path)
+	if err != nil {
+		return "", err
+	}
+	defer zero(key)
+
+	var data VaultData
+	if err := json.Unmarshal(plaintext, &data); err != nil {
+		return "", err
+	}
+
+	for _, entry := range data.Entries {
+		if strings.EqualFold(entry.Notes, notes) {
+			res := fmt.Sprintf("Entry for %s:\n Username: %s\n Password: %s\n", entry.Notes, entry.Username, entry.Password)
+			return res, nil
+		}
+	}
+
+	return "", errors.New("entry not found")
 }
 
 func randomBytes(size int) ([]byte, error) {
