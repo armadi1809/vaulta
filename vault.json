@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "kdf": {
+    "algorithm": "argon2id",
+    "salt": "0xY+xKEKAJJFqoVzjvlLTw==",
+    "iterations": 3,
+    "memory": 65536,
+    "parallelism": 2
+  },
+  "cipher": {
+    "algorithm": "aes-256-gcm",
+    "nonce": "PHPvfpRudOQO62Uh",
+    "data": "289CdtsvgLQPkQM2zUY6dERBfzEXXjiKCIM7LXSE4Xh3yGpov7xX/C+1WmTHWjhljslbOjhztA03iPU9v99H+AnIRQemDHflWgk1cpXmHX1TKt0MPEsfWPVsGlLR7cipzeCU5dRfaGX3bTbROQOSgrbrxkTPU9xbw0gCBrtXBNsGwloX0rLMh5bsWjeN+Q52xtFASCCzxi2vPyfcDdFsdJNa+Cz2hXDzQA=="
+  }
+}

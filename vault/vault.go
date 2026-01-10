@@ -242,18 +242,19 @@ func unlockVault(path string) ([]byte, *VaultFile, []byte, error) {
 }
 
 func AddEntry(path string) error {
+	notes, err := promptNormal("What is this entry for: ")
+	if err != nil {
+		return err
+	}
 	username, err := promptNormal("Enter username: ")
 	if err != nil {
 		return err
 	}
-	password, err := promptPassword("Enter password: ")
+	password, err := promptPassword("Enter password: \n")
 	if err != nil {
 		return err
 	}
-	notes, err := promptNormal("Enter notes: ")
-	if err != nil {
-		return err
-	}
+
 	plaintext, vault, key, err := unlockVault(path)
 	if err != nil {
 		return err
