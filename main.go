@@ -26,7 +26,10 @@ func main() {
 			log.Fatalf("Failed to initialize the vault.. %v", err)
 		}
 	case "add":
-		// add entry workflow
+		err := vault.AddEntry("./vault.json")
+		if err != nil {
+			log.Fatalf("Failed to add entry to the vault.. %v", err)
+		}
 	case "replace":
 		// replace entry workflow
 	case "delete":
