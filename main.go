@@ -37,6 +37,13 @@ func main() {
 			log.Fatalf("Failed to get entry from the vault.. %v", err)
 		}
 		fmt.Println(res)
+	case "list":
+		res, err := vault.ListEntries("./vault.json")
+		if err != nil {
+			log.Fatalf("Failed to list entries from the vault.. %v", err)
+		}
+		fmt.Println("Entries in vault:")
+		fmt.Println(res)
 	case "replace":
 		// replace entry workflow
 	case "delete":

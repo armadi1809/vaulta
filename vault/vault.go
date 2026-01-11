@@ -314,6 +314,26 @@ func GetEntry(path string) (string, error) {
 	return "", errors.New("entry not found")
 }
 
+func ListEntries(path string) (string, error) {
+	plaintext, _, key, err := unlockVault(path)
+	if err != nil {
+		return "", err
+	}
+	defer zero(key)
+
+	var data VaultData
+	if err := json.Unmarshal(plaintext, &data); err != nil {
+		return "", err
+	}
+
+	var entries []string
+	for _, entry := range data.Entries {
+		entries = append(entries, entry.Notes)
+	}
+
+	return "Stored entries:\n" + strings.Join(entries, "\n"), nil
+}
+
 func randomBytes(size int) ([]byte, error) {
 	buf := make([]byte, size)
 	_, err := rand.Read(buf)
