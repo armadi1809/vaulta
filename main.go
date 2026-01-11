@@ -42,7 +42,6 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to list entries from the vault.. %v", err)
 		}
-		fmt.Println("Entries in vault:")
 		fmt.Println(res)
 	case "replace":
 		// replace entry workflow
