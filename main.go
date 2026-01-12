@@ -10,7 +10,11 @@ import (
 
 const usage string = `Usage: vaulta <command> <parameters>
 Available Commands: 
-- init: Initialize a vault if none exists on your machine`
+- init: Initialize a vault if none exists on your machine
+- add: Add an entry to the vault
+- list: List entries available in the vault
+- get <entry>: Get information for the specified entry from the vault
+- delete <entry>: Delete information for the specified entry form the vault`
 
 func main() {
 	args := os.Args
@@ -46,7 +50,16 @@ func main() {
 	case "replace":
 		// replace entry workflow
 	case "delete":
-		// delete entry workflow
+		if len(args) != 3 {
+			fmt.Println(usage)
+			os.Exit(-1)
+		}
+		err := vault.DeleteEtnry("./vault.json", args[2])
+		if err != nil {
+			fmt.Printf("an error ocurred while deleting entry... %v", err)
+			os.Exit(-1)
+		}
+		fmt.Println("Entry succesfully deleted")
 	}
 
 }

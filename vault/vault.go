@@ -47,11 +47,10 @@ type Cipher struct {
 type Entry struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Notes    string `json:"notes"`
 }
 
 type VaultData struct {
-	Entries []Entry `json:"entries"`
+	Entries map[string]Entry `json:"entries"`
 }
 
 // deriveKey derives an encryption key from a password and salt using Argon2id
@@ -201,7 +200,7 @@ func InitVault(path string) error {
 	key := deriveKey(masterPwd, salt)
 	zero(masterPwd)
 
-	plaintext := []byte(`{"entries":[]}`)
+	plaintext := []byte(`{"entries":{}}`)
 	nonce, ciphertext, err := encrypt(key, plaintext)
 	if err != nil {
 		return err
@@ -267,12 +266,14 @@ func AddEntry(path string) error {
 		return err
 	}
 
-	newEntry := Entry{
+	if data.Entries == nil {
+		data.Entries = make(map[string]Entry)
+	}
+
+	data.Entries[strings.ToLower(notes)] = Entry{
 		Username: username,
 		Password: string(password),
-		Notes:    notes,
 	}
-	data.Entries = append(data.Entries, newEntry)
 
 	updatedPlaintext, err := json.Marshal(data)
 	if err != nil {
@@ -304,11 +305,8 @@ func GetEntry(path string) (string, error) {
 		return "", err
 	}
 
-	for _, entry := range data.Entries {
-		if strings.EqualFold(entry.Notes, notes) {
-			res := fmt.Sprintf("Entry for %s:\n Username: %s\n Password: %s\n", entry.Notes, entry.Username, entry.Password)
-			return res, nil
-		}
+	if entry, ok := data.Entries[strings.ToLower(notes)]; ok {
+		return fmt.Sprintf("Entry for %s:\n Username: %s\n Password: %s\n", notes, entry.Username, entry.Password), nil
 	}
 
 	return "", errors.New("entry not found")
@@ -327,11 +325,44 @@ func ListEntries(path string) (string, error) {
 	}
 
 	var entries []string
-	for _, entry := range data.Entries {
-		entries = append(entries, entry.Notes)
+	for k := range data.Entries {
+		entries = append(entries, k)
 	}
 
 	return "Stored entries:\n" + strings.Join(entries, "\n"), nil
+}
+
+func DeleteEtnry(path string, note string) error {
+	plaintext, vault, key, err := unlockVault(path)
+	if err != nil {
+		return err
+	}
+	defer zero(key)
+
+	var data VaultData
+	if err := json.Unmarshal(plaintext, &data); err != nil {
+		return err
+	}
+
+	if data.Entries == nil {
+		return errors.New("the vault is empty")
+	}
+	note_l := strings.ToLower(note)
+
+	delete(data.Entries, note_l)
+
+	updatedPlaintext, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	nonce, ciphertext, err := encrypt(key, updatedPlaintext)
+	if err != nil {
+		return err
+	}
+
+	vault.updateCipher(nonce, ciphertext)
+
+	return writeVaultFile(path, vault)
 }
 
 func randomBytes(size int) ([]byte, error) {
