@@ -47,8 +47,6 @@ func main() {
 			log.Fatalf("Failed to list entries from the vault.. %v", err)
 		}
 		fmt.Println(res)
-	case "replace":
-		// replace entry workflow
 	case "delete":
 		if len(args) != 3 {
 			fmt.Println(usage)
