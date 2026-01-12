@@ -2,62 +2,78 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
 
+	"github.com/alecthomas/kong"
 	"github.com/armadi1809/vaulta/vault"
 )
 
-const usage string = `Usage: vaulta <command> <parameters>
-Available Commands: 
-- init: Initialize a vault if none exists on your machine
-- add: Add an entry to the vault
-- list: List entries available in the vault
-- get <entry>: Get information for the specified entry from the vault
-- delete <entry>: Delete information for the specified entry form the vault`
+const vaultPath string = "./vault.json"
+
+type Init struct {
+}
+
+type List struct {
+}
+
+type Add struct {
+}
+
+type Get struct {
+}
+
+type Delete struct {
+	Entry string `arg:"" name:"entry" help:"Entry to delete from the vault." type:"string"`
+}
+
+func (i *Init) Run() error {
+	return vault.InitVault(vaultPath)
+}
+
+func (l *List) Run() error {
+	res, err := vault.ListEntries("./vault.json")
+	if err != nil {
+		return fmt.Errorf("Failed to list entries from the vault.. %v", err)
+	}
+	fmt.Println(res)
+	return nil
+}
+
+func (a *Add) Run() error {
+	err := vault.AddEntry(vaultPath)
+	if err != nil {
+		return fmt.Errorf("Failed to add entry to the vault.. %v", err)
+	}
+	return nil
+}
+
+func (g *Get) Run() error {
+	res, err := vault.GetEntry(vaultPath)
+	if err != nil {
+		return fmt.Errorf("Failed to get entry from the vault.. %v", err)
+	}
+	fmt.Println(res)
+	return nil
+}
+
+func (d *Delete) Run() error {
+	err := vault.DeleteEtnry(vaultPath, d.Entry)
+	if err != nil {
+		return fmt.Errorf("an error ocurred while deleting entry... %v", err)
+	}
+	fmt.Println("Entry succesfully deleted")
+	return nil
+}
+
+var cli struct {
+	Init   Init   `cmd:"" help:"Initialize the vault."`
+	List   List   `cmd:"" help:"List entries in the vault."`
+	Get    Get    `cmd:"" help:"Get an entry in the vault."`
+	Add    Add    `cmd:"" help:"Add an entry to the vault."`
+	Delete Delete `cmd:"" help:"Delete an entry from the vault."`
+}
 
 func main() {
-	args := os.Args
-	if len(args) <= 1 {
-		fmt.Println(usage)
-		os.Exit(-1)
-	}
-	switch args[1] {
-	case "init":
-		// init vault workflow
-		err := vault.InitVault("./vault.json")
-		if err != nil {
-			log.Fatalf("Failed to initialize the vault.. %v", err)
-		}
-	case "add":
-		err := vault.AddEntry("./vault.json")
-		if err != nil {
-			log.Fatalf("Failed to add entry to the vault.. %v", err)
-		}
-	case "get":
-		// get entry workflow
-		res, err := vault.GetEntry("./vault.json")
-		if err != nil {
-			log.Fatalf("Failed to get entry from the vault.. %v", err)
-		}
-		fmt.Println(res)
-	case "list":
-		res, err := vault.ListEntries("./vault.json")
-		if err != nil {
-			log.Fatalf("Failed to list entries from the vault.. %v", err)
-		}
-		fmt.Println(res)
-	case "delete":
-		if len(args) != 3 {
-			fmt.Println(usage)
-			os.Exit(-1)
-		}
-		err := vault.DeleteEtnry("./vault.json", args[2])
-		if err != nil {
-			fmt.Printf("an error ocurred while deleting entry... %v", err)
-			os.Exit(-1)
-		}
-		fmt.Println("Entry succesfully deleted")
-	}
-
+	ctx := kong.Parse(&cli)
+	err := ctx.Run()
+	ctx.FatalIfErrorf(err)
 }
