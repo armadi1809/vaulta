@@ -187,7 +187,7 @@ func (v *VaultFile) decodeCipher() (salt, nonce, ciphertext []byte, err error) {
 }
 
 func InitVault(path string) error {
-	masterPwd, err := promptPassword("Choose a master password: \n")
+	masterPwd, err := promptPassword("Choose a master password: ")
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,8 @@ func unlockVault(path string) ([]byte, *VaultFile, []byte, error) {
 		return nil, nil, nil, err
 	}
 
-	masterPwd, err := promptPassword("Enter your master password: \n")
+	masterPwd, err := promptPassword("Enter your master password: ")
+	fmt.Println()
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -250,11 +251,11 @@ func AddEntry(path string) error {
 	if err != nil {
 		return err
 	}
-	password, err := promptPassword("Enter password: \n")
+	password, err := promptPassword("Enter password: ")
 	if err != nil {
 		return err
 	}
-
+	fmt.Println()
 	plaintext, vault, key, err := unlockVault(path)
 	if err != nil {
 		return err
