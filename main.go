@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/armadi1809/vaulta/ui"
 	"github.com/armadi1809/vaulta/vault"
 )
 
@@ -32,7 +34,8 @@ func (i *Init) Run() error {
 func (l *List) Run() error {
 	res, err := vault.ListEntries("./vault.json")
 	if err != nil {
-		return fmt.Errorf("Failed to list entries from the vault.. %v", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to list entries: %v", err)))
+		os.Exit(1)
 	}
 	fmt.Println(res)
 	return nil
@@ -41,7 +44,8 @@ func (l *List) Run() error {
 func (a *Add) Run() error {
 	err := vault.AddEntry(vaultPath)
 	if err != nil {
-		return fmt.Errorf("Failed to add entry to the vault.. %v", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to add entry: %v", err)))
+		os.Exit(1)
 	}
 	return nil
 }
@@ -49,18 +53,19 @@ func (a *Add) Run() error {
 func (g *Get) Run() error {
 	res, err := vault.GetEntry(vaultPath)
 	if err != nil {
-		return fmt.Errorf("Failed to get entry from the vault.. %v", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to get entry: %v", err)))
+		os.Exit(1)
 	}
 	fmt.Println(res)
 	return nil
 }
 
 func (d *Delete) Run() error {
-	err := vault.DeleteEtnry(vaultPath, d.Entry)
+	err := vault.DeleteEntry(vaultPath, d.Entry)
 	if err != nil {
-		return fmt.Errorf("an error ocurred while deleting entry... %v", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to delete entry: %v", err)))
+		os.Exit(1)
 	}
-	fmt.Println("Entry succesfully deleted")
 	return nil
 }
 
@@ -73,7 +78,11 @@ var cli struct {
 }
 
 func main() {
-	ctx := kong.Parse(&cli)
+	ctx := kong.Parse(&cli,
+		kong.Name("vaulta"),
+		kong.Description(ui.SubtitleStyle.Render("🔐 A secure password vault for the command line")),
+		kong.UsageOnError(),
+	)
 	err := ctx.Run()
 	ctx.FatalIfErrorf(err)
 }

@@ -11,8 +11,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/armadi1809/vaulta/ui"
 	"golang.org/x/crypto/argon2"
-	"golang.org/x/term"
 )
 
 // KDF configuration constants
@@ -128,17 +128,17 @@ func writeVaultFile(path string, vault *VaultFile) error {
 	return enc.Encode(vault)
 }
 
-// promptPassword prompts the user for a password
+// promptPassword prompts the user for a password using the TUI
 func promptPassword(prompt string) ([]byte, error) {
-	fmt.Print(prompt)
-	return term.ReadPassword(int(os.Stdin.Fd()))
+	pwd, err := ui.PromptPassword(prompt)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(pwd), nil
 }
 
-func promptNormal(prompt string) (string, error) {
-	fmt.Print(prompt)
-	var input string
-	_, err := fmt.Scanln(&input)
-	return input, err
+func promptNormal(prompt string, icon string) (string, error) {
+	return ui.PromptText(prompt, icon)
 }
 
 // newVaultFile creates a new VaultFile with the given salt, nonce, and ciphertext
@@ -187,7 +187,11 @@ func (v *VaultFile) decodeCipher() (salt, nonce, ciphertext []byte, err error) {
 }
 
 func InitVault(path string) error {
-	masterPwd, err := promptPassword("Choose a master password: ")
+	fmt.Println(ui.RenderLogo())
+	fmt.Println(ui.TitleStyle.Render("🔐 Initialize New Vault"))
+	fmt.Println()
+
+	masterPwd, err := promptPassword("Choose a master password")
 	if err != nil {
 		return err
 	}
@@ -210,7 +214,15 @@ func InitVault(path string) error {
 	zero(key)
 
 	vault := newVaultFile(salt, nonce, ciphertext)
-	return writeVaultFile(path, vault)
+	err = writeVaultFile(path, vault)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(ui.RenderSuccess("Vault initialized successfully!"))
+	fmt.Println(ui.DimStyle.Render("  Your encrypted vault is ready to use."))
+	fmt.Println()
+	return nil
 }
 
 func unlockVault(path string) ([]byte, *VaultFile, []byte, error) {
@@ -219,8 +231,7 @@ func unlockVault(path string) ([]byte, *VaultFile, []byte, error) {
 		return nil, nil, nil, err
 	}
 
-	masterPwd, err := promptPassword("Enter your master password: ")
-	fmt.Println()
+	masterPwd, err := promptPassword("Enter your master password")
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -243,19 +254,23 @@ func unlockVault(path string) ([]byte, *VaultFile, []byte, error) {
 }
 
 func AddEntry(path string) error {
-	notes, err := promptNormal("What is this entry for: ")
-	if err != nil {
-		return err
-	}
-	username, err := promptNormal("Enter username: ")
-	if err != nil {
-		return err
-	}
-	password, err := promptPassword("Enter password: ")
-	if err != nil {
-		return err
-	}
+	fmt.Println(ui.RenderLogo())
+	fmt.Println(ui.TitleStyle.Render("➕ Add New Entry"))
 	fmt.Println()
+
+	notes, err := promptNormal("What is this entry for?", ui.IconInfo)
+	if err != nil {
+		return err
+	}
+	username, err := promptNormal("Enter username", "👤")
+	if err != nil {
+		return err
+	}
+	password, err := promptPassword("Enter password")
+	if err != nil {
+		return err
+	}
+
 	plaintext, vault, key, err := unlockVault(path)
 	if err != nil {
 		return err
@@ -287,11 +302,22 @@ func AddEntry(path string) error {
 	}
 
 	vault.updateCipher(nonce, ciphertext)
-	return writeVaultFile(path, vault)
+	err = writeVaultFile(path, vault)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(ui.RenderSuccess(fmt.Sprintf("Entry '%s' added successfully!", notes)))
+	fmt.Println()
+	return nil
 }
 
 func GetEntry(path string) (string, error) {
-	notes, err := promptNormal("Enter the notes for the entry you want to retrieve: ")
+	fmt.Println(ui.RenderLogo())
+	fmt.Println(ui.TitleStyle.Render("🔍 Retrieve Entry"))
+	fmt.Println()
+
+	notes, err := promptNormal("Enter the name of the entry to retrieve", ui.IconSearch)
 	if err != nil {
 		return "", err
 	}
@@ -307,13 +333,17 @@ func GetEntry(path string) (string, error) {
 	}
 
 	if entry, ok := data.Entries[strings.ToLower(notes)]; ok {
-		return fmt.Sprintf("Entry for %s:\n Username: %s\n Password: %s\n", notes, entry.Username, entry.Password), nil
+		return ui.RenderEntry(notes, entry.Username, entry.Password), nil
 	}
 
 	return "", errors.New("entry not found")
 }
 
 func ListEntries(path string) (string, error) {
+	fmt.Println(ui.RenderLogo())
+	fmt.Println(ui.TitleStyle.Render("📋 List All Entries"))
+	fmt.Println()
+
 	plaintext, _, key, err := unlockVault(path)
 	if err != nil {
 		return "", err
@@ -330,10 +360,14 @@ func ListEntries(path string) (string, error) {
 		entries = append(entries, k)
 	}
 
-	return "Stored entries:\n" + strings.Join(entries, "\n"), nil
+	return ui.RenderList("Stored Entries", entries), nil
 }
 
-func DeleteEtnry(path string, note string) error {
+func DeleteEntry(path string, note string) error {
+	fmt.Println(ui.RenderLogo())
+	fmt.Println(ui.TitleStyle.Render("🗑️  Delete Entry"))
+	fmt.Println()
+
 	plaintext, vault, key, err := unlockVault(path)
 	if err != nil {
 		return err
@@ -350,6 +384,10 @@ func DeleteEtnry(path string, note string) error {
 	}
 	note_l := strings.ToLower(note)
 
+	if _, exists := data.Entries[note_l]; !exists {
+		return fmt.Errorf("entry '%s' not found in vault", note)
+	}
+
 	delete(data.Entries, note_l)
 
 	updatedPlaintext, err := json.Marshal(data)
@@ -363,7 +401,14 @@ func DeleteEtnry(path string, note string) error {
 
 	vault.updateCipher(nonce, ciphertext)
 
-	return writeVaultFile(path, vault)
+	err = writeVaultFile(path, vault)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(ui.RenderSuccess(fmt.Sprintf("Entry '%s' deleted successfully!", note)))
+	fmt.Println()
+	return nil
 }
 
 func randomBytes(size int) ([]byte, error) {
