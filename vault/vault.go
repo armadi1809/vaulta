@@ -312,15 +312,11 @@ func AddEntry(path string) error {
 	return nil
 }
 
-func GetEntry(path string) (string, error) {
+func GetEntry(path, note string) (string, error) {
 	fmt.Println(ui.RenderLogo())
 	fmt.Println(ui.TitleStyle.Render("🔍 Retrieve Entry"))
 	fmt.Println()
 
-	notes, err := promptNormal("Enter the name of the entry to retrieve", ui.IconSearch)
-	if err != nil {
-		return "", err
-	}
 	plaintext, _, key, err := unlockVault(path)
 	if err != nil {
 		return "", err
@@ -332,11 +328,11 @@ func GetEntry(path string) (string, error) {
 		return "", err
 	}
 
-	if entry, ok := data.Entries[strings.ToLower(notes)]; ok {
-		return ui.RenderEntry(notes, entry.Username, entry.Password), nil
+	if entry, ok := data.Entries[strings.ToLower(note)]; ok {
+		return ui.RenderEntry(note, entry.Username, entry.Password), nil
 	}
 
-	return "", errors.New("entry not found")
+	return "", errors.New("entry not found. Try 'vault list' to see all entries")
 }
 
 func ListEntries(path string) (string, error) {

@@ -21,6 +21,7 @@ type Add struct {
 }
 
 type Get struct {
+	Entry string `arg:"" name:"entry" help:"Entry to get from the vault." type:"string"`
 }
 
 type Delete struct {
@@ -51,7 +52,7 @@ func (a *Add) Run() error {
 }
 
 func (g *Get) Run() error {
-	res, err := vault.GetEntry(vaultPath)
+	res, err := vault.GetEntry(vaultPath, g.Entry)
 	if err != nil {
 		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to get entry: %v", err)))
 		os.Exit(1)
