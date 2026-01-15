@@ -56,10 +56,6 @@ func (m PasswordInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PasswordInput) View() string {
-	if m.done {
-		return ""
-	}
-
 	promptStyle := lipgloss.NewStyle().
 		Foreground(Accent).
 		Bold(true)
@@ -134,10 +130,6 @@ func (m TextInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m TextInput) View() string {
-	if m.done {
-		return ""
-	}
-
 	promptStyle := lipgloss.NewStyle().
 		Foreground(Accent).
 		Bold(true)
