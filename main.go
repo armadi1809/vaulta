@@ -33,7 +33,7 @@ func (i *Init) Run() error {
 }
 
 func (l *List) Run() error {
-	res, err := vault.ListEntries("./vault.json")
+	res, err := vault.ListEntries(vaultPath)
 	if err != nil {
 		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to list entries: %v", err)))
 		os.Exit(1)

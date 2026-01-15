@@ -188,6 +188,16 @@ func (v *VaultFile) decodeCipher() (salt, nonce, ciphertext []byte, err error) {
 
 func InitVault(path string) error {
 	fmt.Println(ui.RenderLogo())
+	if exist := checkFileExists(path); exist {
+		text, err := promptNormal("A Vaulta vault already exists, do you want to overwrite it? (y/n)", ui.IconWarning)
+		if err != nil {
+			return err
+		}
+		if strings.ToLower(text) != "y" {
+			fmt.Println(ui.RenderInfo("Info", "Vault initialization cancelled. Vault remains unchanged."))
+			return nil
+		}
+	}
 	fmt.Println(ui.TitleStyle.Render("🔐 Initialize New Vault"))
 	fmt.Println()
 
@@ -420,4 +430,10 @@ func zero(buf []byte) {
 	for i := range buf {
 		buf[i] = 0
 	}
+}
+
+func checkFileExists(filePath string) bool {
+	_, error := os.Stat(filePath)
+	//return !os.IsNotExist(err)
+	return !errors.Is(error, os.ErrNotExist)
 }
