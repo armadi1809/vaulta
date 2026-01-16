@@ -5,11 +5,10 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/armadi1809/vaulta/config"
 	"github.com/armadi1809/vaulta/ui"
 	"github.com/armadi1809/vaulta/vault"
 )
-
-const vaultPath string = "./vault.json"
 
 type Init struct {
 }
@@ -28,12 +27,12 @@ type Delete struct {
 	Entry string `arg:"" name:"entry" help:"Entry to delete from the vault." type:"string"`
 }
 
-func (i *Init) Run() error {
-	return vault.InitVault(vaultPath)
+func (i *Init) Run(vault *vault.Vault) error {
+	return vault.InitVault()
 }
 
-func (l *List) Run() error {
-	res, err := vault.ListEntries(vaultPath)
+func (l *List) Run(vault *vault.Vault) error {
+	res, err := vault.ListEntries()
 	if err != nil {
 		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to list entries: %v", err)))
 		os.Exit(1)
@@ -43,7 +42,7 @@ func (l *List) Run() error {
 }
 
 func (a *Add) Run() error {
-	err := vault.AddEntry(vaultPath)
+	err := vault.AddEntry()
 	if err != nil {
 		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to add entry: %v", err)))
 		os.Exit(1)
@@ -51,8 +50,8 @@ func (a *Add) Run() error {
 	return nil
 }
 
-func (g *Get) Run() error {
-	res, err := vault.GetEntry(vaultPath, g.Entry)
+func (g *Get) Run(vault *vault.Vault) error {
+	res, err := vault.GetEntry(g.Entry)
 	if err != nil {
 		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to get entry: %v", err)))
 		os.Exit(1)
@@ -61,8 +60,8 @@ func (g *Get) Run() error {
 	return nil
 }
 
-func (d *Delete) Run() error {
-	err := vault.DeleteEntry(vaultPath, d.Entry)
+func (d *Delete) Run(vault *vault.Vault) error {
+	err := vault.DeleteEntry(d.Entry)
 	if err != nil {
 		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to delete entry: %v", err)))
 		os.Exit(1)
@@ -84,6 +83,16 @@ func main() {
 		kong.Description(ui.SubtitleStyle.Render("🔐 A secure password vault for the command line")),
 		kong.UsageOnError(),
 	)
-	err := ctx.Run()
+	vaultPath, err := config.DefaultVaultPath()
+	if err != nil {
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to get vault path: %v", err)))
+		os.Exit(1)
+	}
+	v, err := vault.New(vaultPath)
+	if err != nil {
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to initialize vault: %v", err)))
+		os.Exit(1)
+	}
+	err = ctx.Run(v)
 	ctx.FatalIfErrorf(err)
 }

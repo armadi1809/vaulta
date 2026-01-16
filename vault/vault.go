@@ -9,8 +9,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/armadi1809/vaulta/config"
 	"github.com/armadi1809/vaulta/ui"
 	"golang.org/x/crypto/argon2"
 )
@@ -51,6 +53,21 @@ type Entry struct {
 
 type VaultData struct {
 	Entries map[string]Entry `json:"entries"`
+}
+
+type Vault struct {
+	path string
+}
+
+func New(path string) (*Vault, error) {
+	if path == "" {
+		var err error
+		path, err = config.DefaultVaultPath()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &Vault{path: path}, nil
 }
 
 // deriveKey derives an encryption key from a password and salt using Argon2id
@@ -117,6 +134,12 @@ func readVaultFile(path string) (*VaultFile, error) {
 
 // writeVaultFile writes the vault to a JSON file
 func writeVaultFile(path string, vault *VaultFile) error {
+	// Ensure the parent directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
@@ -186,7 +209,8 @@ func (v *VaultFile) decodeCipher() (salt, nonce, ciphertext []byte, err error) {
 	return salt, nonce, ciphertext, nil
 }
 
-func InitVault(path string) error {
+func (v *Vault) InitVault() error {
+	path := v.path
 	fmt.Println(ui.RenderLogo())
 	if exist := checkFileExists(path); exist {
 		text, err := promptNormal("A Vaulta vault already exists, do you want to overwrite it? (y/n)", ui.IconWarning)
@@ -263,7 +287,11 @@ func unlockVault(path string) ([]byte, *VaultFile, []byte, error) {
 	return plaintext, vault, key, nil
 }
 
-func AddEntry(path string) error {
+func AddEntry() error {
+	path, err := config.DefaultVaultPath()
+	if err != nil {
+		return err
+	}
 	fmt.Println(ui.RenderLogo())
 	fmt.Println(ui.TitleStyle.Render("➕ Add New Entry"))
 	fmt.Println()
@@ -322,7 +350,8 @@ func AddEntry(path string) error {
 	return nil
 }
 
-func GetEntry(path, note string) (string, error) {
+func (v *Vault) GetEntry(note string) (string, error) {
+	path := v.path
 	fmt.Println(ui.RenderLogo())
 	fmt.Println(ui.TitleStyle.Render("🔍 Retrieve Entry"))
 	fmt.Println()
@@ -345,11 +374,11 @@ func GetEntry(path, note string) (string, error) {
 	return "", errors.New("entry not found. Try 'vault list' to see all entries")
 }
 
-func ListEntries(path string) (string, error) {
+func (v *Vault) ListEntries() (string, error) {
 	fmt.Println(ui.RenderLogo())
 	fmt.Println(ui.TitleStyle.Render("📋 List All Entries"))
 	fmt.Println()
-
+	path := v.path
 	plaintext, _, key, err := unlockVault(path)
 	if err != nil {
 		return "", err
@@ -369,10 +398,11 @@ func ListEntries(path string) (string, error) {
 	return ui.RenderList("Stored Entries", entries), nil
 }
 
-func DeleteEntry(path string, note string) error {
+func (v *Vault) DeleteEntry(note string) error {
 	fmt.Println(ui.RenderLogo())
 	fmt.Println(ui.TitleStyle.Render("🗑️  Delete Entry"))
 	fmt.Println()
+	path := v.path
 
 	plaintext, vault, key, err := unlockVault(path)
 	if err != nil {
