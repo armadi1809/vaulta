@@ -1,6 +1,8 @@
 # Vaulta
 
-Vaulta is a secure terminal based secret manager. It encrypts your data using AES-256-GCM and stores it to a local JSON file on your computer.
+Vaulta is a secure CLI based secret manager written in go using bubbletea for terminal styling. It encrypts your data using AES-256-GCM and stores it to a local JSON file on your computer.
+
+![Vaulta Screenshot](img/readme.png)
 
 ## Installation
 
