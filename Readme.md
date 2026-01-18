@@ -56,6 +56,14 @@ sudo mv vaulta /usr/local/bin/
 
 ## Usage
 
+To start using vaulta, run the following command.
+
+```shell
+vaulta init
+```
+
+Follow the prompts to initialize your password.
+
 ### Available Commands
 
 Below is a list of the currently available commands in vaulta (more features to come hopefully)
