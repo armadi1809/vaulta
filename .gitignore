@@ -1,3 +1,5 @@
 vault.json
 vaulta
 .DS_STORE
+# Added by goreleaser init:
+dist/
