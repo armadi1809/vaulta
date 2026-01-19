@@ -300,11 +300,11 @@ func AddEntry() error {
 	if err != nil {
 		return err
 	}
-	username, err := promptNormal("Enter username", "👤")
+	username, err := promptNormal("Enter username or secret description", "👤")
 	if err != nil {
 		return err
 	}
-	password, err := promptPassword("Enter password")
+	password, err := promptPassword("Enter secret")
 	if err != nil {
 		return err
 	}
