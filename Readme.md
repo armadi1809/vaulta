@@ -11,14 +11,14 @@ Vaulta is a secure CLI based secret manager written in go using bubbletea for te
 If you have Go installed, you can install vaulta directly:
 
 ```bash
-go install github.com/azizrmadi/vaulta@latest
+go install github.com/armadi1809/vaulta@latest
 ```
 
 ### Download Binary from GitHub Releases
 
-You can download pre-built binaries from the [GitHub Releases](https://github.com/azizrmadi/vaulta/releases) page.
+You can download pre-built binaries from the [GitHub Releases](https://github.com/armadi1809/vaulta/releases) page.
 
-1. Go to the [releases page](https://github.com/azizrmadi/vaulta/releases)
+1. Go to the [releases page](https://github.com/armadi1809/vaulta/releases)
 2. Download the appropriate binary for your operating system and architecture
 3. Extract the archive and move the binary to a directory in your `PATH`
 
@@ -27,7 +27,7 @@ You can download pre-built binaries from the [GitHub Releases](https://github.co
 #### macOS (Apple Silicon)
 
 ```bash
-curl -Lo vaulta.tar.gz https://github.com/azizrmadi/vaulta/releases/latest/download/vaulta_Darwin_arm64.tar.gz
+curl -Lo vaulta.tar.gz https://github.com/armadi1809/vaulta/releases/latest/download/vaulta_Darwin_arm64.tar.gz
 tar -xzf vaulta.tar.gz
 sudo mv vaulta /usr/local/bin/
 ```
@@ -35,7 +35,7 @@ sudo mv vaulta /usr/local/bin/
 #### macOS (Intel)
 
 ```bash
-curl -Lo vaulta.tar.gz https://github.com/azizrmadi/vaulta/releases/latest/download/vaulta_Darwin_x86_64.tar.gz
+curl -Lo vaulta.tar.gz https://github.com/armadi1809/vaulta/releases/latest/download/vaulta_Darwin_x86_64.tar.gz
 tar -xzf vaulta.tar.gz
 sudo mv vaulta /usr/local/bin/
 ```
@@ -43,7 +43,7 @@ sudo mv vaulta /usr/local/bin/
 #### Linux (amd64)
 
 ```bash
-curl -Lo vaulta.tar.gz https://github.com/azizrmadi/vaulta/releases/latest/download/vaulta_Linux_x86_64.tar.gz
+curl -Lo vaulta.tar.gz https://github.com/armadi1809/vaulta/releases/latest/download/vaulta_Linux_x86_64.tar.gz
 tar -xzf vaulta.tar.gz
 sudo mv vaulta /usr/local/bin/
 ```
@@ -51,7 +51,7 @@ sudo mv vaulta /usr/local/bin/
 #### Linux (arm64)
 
 ```bash
-curl -Lo vaulta.tar.gz https://github.com/azizrmadi/vaulta/releases/latest/download/vaulta_Linux_arm64.tar.gz
+curl -Lo vaulta.tar.gz https://github.com/armadi1809/vaulta/releases/latest/download/vaulta_Linux_arm64.tar.gz
 tar -xzf vaulta.tar.gz
 sudo mv vaulta /usr/local/bin/
 ```
