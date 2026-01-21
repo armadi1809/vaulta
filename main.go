@@ -27,6 +27,9 @@ type Delete struct {
 	Entry string `arg:"" name:"entry" help:"Entry to delete from the vault." type:"string"`
 }
 
+type Reset struct {
+}
+
 func (i *Init) Run(vault *vault.Vault) error {
 	return vault.InitVault()
 }
@@ -69,12 +72,22 @@ func (d *Delete) Run(vault *vault.Vault) error {
 	return nil
 }
 
+func (r *Reset) Run(vault *vault.Vault) error {
+	err := vault.ResetEntry()
+	if err != nil {
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to reset vault: %v", err)))
+		os.Exit(1)
+	}
+	return nil
+}
+
 var cli struct {
 	Init   Init   `cmd:"" help:"Initialize the vault."`
 	List   List   `cmd:"" help:"List entries in the vault."`
 	Get    Get    `cmd:"" help:"Get an entry in the vault."`
 	Add    Add    `cmd:"" help:"Add an entry to the vault."`
 	Delete Delete `cmd:"" help:"Delete an entry from the vault."`
+	Reset  Reset  `cmd:"" help:"Reset vault"`
 }
 
 func main() {

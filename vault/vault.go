@@ -447,6 +447,22 @@ func (v *Vault) DeleteEntry(note string) error {
 	return nil
 }
 
+func (v *Vault) ResetEntry() error {
+	path := v.path
+	fmt.Println(ui.RenderLogo())
+	if exist := checkFileExists(path); exist {
+		plaintext, _, key, err := unlockVault(path)
+		if err != nil {
+			return err
+		}
+		zero(plaintext)
+		zero(key)
+		return os.Remove(path)
+	}
+	fmt.Println(ui.RenderInfo("Info", "No vault exists on your system, initialize one by running the init command"))
+	return nil
+}
+
 func randomBytes(size int) ([]byte, error) {
 	buf := make([]byte, size)
 	_, err := rand.Read(buf)
@@ -464,6 +480,5 @@ func zero(buf []byte) {
 
 func checkFileExists(filePath string) bool {
 	_, error := os.Stat(filePath)
-	//return !os.IsNotExist(err)
 	return !errors.Is(error, os.ErrNotExist)
 }
